@@ -101,10 +101,12 @@ module appServicePlanModule './modules/appServicePlan.bicep' = {
   }
 }
 
+var functionAppName = '${funcName}-${uniqueString(resourceGroup().id)}'
+
 module functionAppStageModule './modules/functionAppStage.bicep' = {
   name: 'functionAppStageDeployment'
   params: {
-    sites_name: funcName
+    sites_name: functionAppName
     location: location
     serverfarms_ASP_externalid: appServicePlanModule.outputs.appServicePlanId
     zoneName: zoneName
@@ -114,7 +116,7 @@ module functionAppStageModule './modules/functionAppStage.bicep' = {
 module functionAppProdModule './modules/functionAppProd.bicep' = {
   name: 'functionAppProdDeployment'
   params: {
-    functionAppName: funcName
+    functionAppName: functionAppName
     location: location
     appServicePlanId: appServicePlanModule.outputs.appServicePlanId
     zoneName: zoneName
