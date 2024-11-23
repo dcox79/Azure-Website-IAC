@@ -1,7 +1,7 @@
 using './main.bicep'
 param environment = 'prod'
-param location = 'eastus'
-param zoneName = 'davidjcox.com'
+param location = 'centralus'
+param zoneName = 'davidjcox.online'
 param funcName = 'getresumevisitors'
 param dnsRecords = {
   aRecords: [
