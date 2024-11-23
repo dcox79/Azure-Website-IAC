@@ -31,12 +31,12 @@ param dnsRecords object = {
   ]
 }
 
-var namePrefix = toLower('${environment}-myproject')
+var namePrefix = toLower('${environment}myproject')
 
 module primaryStorageAccountModule './modules/storageAccount.bicep' = {
   name: 'primaryStorageDeployment'
   params: {
-    storageAccountName: '${namePrefix}storage'
+    storageAccountName: '${namePrefix}stor'
     location: location
     skuName: 'Standard_LRS'
     accessTier: 'Hot'
@@ -48,7 +48,7 @@ module primaryStorageAccountModule './modules/storageAccount.bicep' = {
 module functionStorageAccountModule './modules/storageAccount.bicep' = {
   name: 'functionStorageDeployment'
   params: {
-    storageAccountName: '${namePrefix}funcstorage'
+    storageAccountName: '${namePrefix}func'
     location: location
     skuName: 'Standard_LRS'
     accessTier: 'Hot'

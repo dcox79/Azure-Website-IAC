@@ -44,16 +44,16 @@ resource cnameRecords 'Microsoft.Network/dnszones/CNAME@2023-07-01-preview' = [f
   }
 }]
 
-resource txtRecords 'Microsoft.Network/dnszones/TXT@2023-07-01-preview' = [for record in dnsRecords.txtRecords: {
+resource txtRecords 'Microsoft.Network/dnszones/TXT@2023-07-01-preview' = [for (record, i) in dnsRecords.txtRecords: {
   parent: dnsZone
   name: record.name
   properties: {
     TTL: record.ttl
-    TXTRecords: [for value in record.values: {
+    TXTRecords: map(record.values, (value, j) => {
       value: [
         value
       ]
-    }]
+    })
   }
 }]
 

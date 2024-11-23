@@ -18,9 +18,12 @@ az login
 az account set --subscription <subscription-id>
 ```
 
-3. Create a resource group (if not exists)
+3. Set resource group and template variable and create it (if not exists)
 ```bash
-az group create --name <resource-group-name> --location eastus
+$RG="your-resource-group-name"
+$TEMPLATE="main.bicep"
+$PARAMS="main.bicepparam"
+az group create --name $RG --location eastus
 ```
 
 ## Parameters
@@ -35,18 +38,12 @@ endLine: 33
 
 1. Test the deployment (What-if)
 ```bash
-az deployment group what-if \
-  --resource-group <resource-group-name> \
-  --template-file main.bicep \
-  --parameters main.bicepparam
+az deployment group what-if --resource-group $RG --template-file $TEMPLATE --parameters $PARAMS
 ```
 
 2. Deploy the infrastructure
 ```bash
-az deployment group create \
-  --resource-group <resource-group-name> \
-  --template-file main.bicep \
-  --parameters main.bicepparam
+az deployment group create --resource-group $RG --template-file $TEMPLATE --parameters $PARAMS
 ```
 
 ## Resources Deployed
