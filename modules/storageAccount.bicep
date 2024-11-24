@@ -28,6 +28,9 @@ param allowBlobPublicAccess bool = false
 @description('Enable shared key access')
 param allowSharedKeyAccess bool = true
 
+@description('Resource tags')
+param tags object
+
 var storageAccountProperties = {
   defaultToOAuthAuthentication: true
   allowCrossTenantReplication: false
@@ -61,6 +64,7 @@ var storageAccountProperties = {
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
   location: location
+  tags: tags
   sku: {
     name: skuName
   }

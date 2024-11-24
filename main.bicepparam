@@ -1,8 +1,22 @@
 using './main.bicep'
+
+// Basic deployment parameters
 param environment = 'prod'
 param location = 'centralus'
-param zoneName = 'davidjcox.online'
-param funcName = 'getresumevisitors'
+param zoneName = 'yourdomain.com'
+param funcName = 'myfunction'
+param profileName = 'myfrontdoor'
+
+// Resource tags
+param tags = {
+  Application: 'CloudResume'
+  Environment: environment
+  Owner: 'CloudTeam'
+  CostCenter: 'CloudOps'
+  ManagedBy: 'Bicep'
+}
+
+// DNS Configuration
 param dnsRecords = {
   aRecords: [
     {
@@ -14,11 +28,6 @@ param dnsRecords = {
     {
       name: 'www'
       ttl: 3600
-    }
-    {
-      name: 'cdnverify.www'
-      ttl: 3600
-      cname: 'cdnverify.myhome.azureedge.net'
     }
   ]
   txtRecords: [

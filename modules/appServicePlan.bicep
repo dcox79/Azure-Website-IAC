@@ -2,55 +2,47 @@
 param appServicePlanName string
 
 @description('The location for the App Service Plan')
-param location string = resourceGroup().location
+param location string
 
 @description('The SKU name for the App Service Plan')
+param skuName string
+
+@description('The OS type for the App Service Plan')
 @allowed([
-  'Y1'  // Consumption
-  'B1'  // Basic
-  'S1'  // Standard
-  'P1V2' // Premium V2
+  'Windows'
+  'Linux'
 ])
-param skuName string = 'Y1'
+param osType string = 'Linux'
 
 @description('The SKU tier for the App Service Plan')
-param skuTier string = 'Dynamic'
-
-@description('The operating system type for the App Service Plan')
 @allowed([
-  'linux'
-  'windows'
+  'Free'
+  'Shared'
+  'Basic'
+  'Standard'
+  'Premium'
+  'PremiumV2'
+  'PremiumV3'
+  'Isolated'
+  'IsolatedV2'
 ])
-param osType string = 'linux'
+param skuTier string
 
-var isPremiumTier = contains(skuName, 'P')
-var isConsumptionTier = skuName == 'Y1'
+@description('Resource tags')
+param tags object
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: appServicePlanName
   location: location
-  kind: osType == 'linux' ? 'functionapp,linux' : 'functionapp'
+  tags: tags
   sku: {
     name: skuName
     tier: skuTier
-    size: skuName
-    family: take(skuName, 1)
-    capacity: isConsumptionTier ? 0 : 1
   }
+  kind: osType == 'Linux' ? 'linux' : 'app'
   properties: {
-    perSiteScaling: false
-    elasticScaleEnabled: isPremiumTier
-    maximumElasticWorkerCount: isPremiumTier ? 20 : 1
-    isSpot: false
-    reserved: osType == 'linux'
-    isXenon: false
-    hyperV: false
-    targetWorkerCount: 0
-    targetWorkerSizeId: 0
-    zoneRedundant: false
+    reserved: osType == 'Linux'
   }
 }
 
-// Outputs
 output appServicePlanId string = appServicePlan.id
-output appServicePlanName string = appServicePlan.name

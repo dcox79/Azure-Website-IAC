@@ -1,59 +1,59 @@
-param environment string
-param location string = resourceGroup().location
-param zoneName string
-param funcName string
-param dnsRecords object = {
-  aRecords: [
-    {
-      name: '@'
-      ttl: 3600
-    }
-  ]
-  cnameRecords: [
-    {
-      name: 'www'
-      ttl: 3600
-    }
-    {
-      name: 'cdnverify.www'
-      ttl: 3600
-      cname: 'cdnverify.myhome.azureedge.net'
-    }
-  ]
-  txtRecords: [
-    {
-      name: '@'
-      ttl: 3600
-      values: [
-        'MS=ms12345678' // Replace with your actual verification code
-      ]
-    }
-  ]
-}
+@description('The environment type for deployment (nonprod or prod)')
+@allowed([
+  'nonprod'
+  'prod'
+])
+param environment string = 'prod'
 
-var namePrefix = toLower('${environment}myproject')
+@description('Azure region for resource deployment')
+param location string = resourceGroup().location
+
+@description('The domain name for DNS configuration')
+param zoneName string
+
+@description('Base name for the function app')
+param funcName string
+
+@description('Front Door profile name')
+param profileName string
+
+@description('DNS records configuration')
+param dnsRecords object
+
+@description('Resource tags')
+param tags object
+
+// Variables
+var uniqueSuffix = uniqueString(subscription().subscriptionId, resourceGroup().id)
+var storageAccountSkuName = (environment == 'prod') ? 'Standard_GRS' : 'Standard_LRS'
+var appServicePlanSkuName = (environment == 'prod') ? 'P1V2' : 'B1'
+var functionAppName = '${environment}-${funcName}-${uniqueSuffix}'
+var primaryStorageAccountName = '${environment}myprojectstor${uniqueSuffix}'
+var functionStorageAccountName = '${environment}myprojectfunc${uniqueSuffix}'
 
 module primaryStorageAccountModule './modules/storageAccount.bicep' = {
   name: 'primaryStorageDeployment'
   params: {
-    storageAccountName: '${namePrefix}stor'
+    storageAccountName: primaryStorageAccountName
     location: location
-    skuName: 'Standard_LRS'
+    skuName: storageAccountSkuName
     accessTier: 'Hot'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: true
+    tags: tags
   }
 }
 
 module functionStorageAccountModule './modules/storageAccount.bicep' = {
   name: 'functionStorageDeployment'
   params: {
-    storageAccountName: '${namePrefix}func'
+    storageAccountName: functionStorageAccountName
     location: location
-    skuName: 'Standard_LRS'
+    skuName: storageAccountSkuName
     accessTier: 'Hot'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: true
+    tags: tags
   }
 }
 
@@ -78,9 +78,11 @@ module functionContainerDeployments 'modules/createContainer.bicep' = [for conta
 module frontDoorModule './modules/frontDoor.bicep' = {
   name: 'frontDoorDeployment'
   params: {
-    profiles_myhomepage_name: 'myhomepage'
-    dnszones_davidjcox_com_externalid: resourceId('Microsoft.Network/dnszones', zoneName)
-    storageAccountName: primaryStorageAccountModule.outputs.storageAccountName
+    profileName: profileName
+    dnsZoneId: resourceId('Microsoft.Network/dnszones', zoneName)
+    primaryStorageAccountName: primaryStorageAccountName
+    zoneName: zoneName
+    tags: tags
   }
 }
 
@@ -96,12 +98,14 @@ module dnsZoneModule './modules/dnsZone.bicep' = {
 module appServicePlanModule './modules/appServicePlan.bicep' = {
   name: 'appServicePlanDeployment'
   params: {
-    appServicePlanName: '${namePrefix}-asp'
+    appServicePlanName: '${environment}-myproject-asp'
     location: location
+    skuName: appServicePlanSkuName
+    osType: 'Linux'
+    skuTier: environment == 'prod' ? 'PremiumV2' : 'Basic'
+    tags: tags
   }
 }
-
-var functionAppName = '${funcName}-${uniqueString(resourceGroup().id)}'
 
 module functionAppStageModule './modules/functionAppStage.bicep' = {
   name: 'functionAppStageDeployment'
@@ -110,6 +114,7 @@ module functionAppStageModule './modules/functionAppStage.bicep' = {
     location: location
     serverfarms_ASP_externalid: appServicePlanModule.outputs.appServicePlanId
     zoneName: zoneName
+    tags: tags
   }
 }
 
@@ -120,6 +125,8 @@ module functionAppProdModule './modules/functionAppProd.bicep' = {
     location: location
     appServicePlanId: appServicePlanModule.outputs.appServicePlanId
     zoneName: zoneName
+    runtimeStack: 'dotnet-isolated|8.0'
+    tags: tags
   }
 }
 
