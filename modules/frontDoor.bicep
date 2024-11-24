@@ -4,9 +4,6 @@ param profileName string
 @description('The DNS Zone resource ID')
 param dnsZoneId string
 
-@description('The primary storage account name')
-param primaryStorageAccountName string
-
 @description('The zone name for the custom domain')
 param zoneName string
 
@@ -16,9 +13,9 @@ param tags object
 @description('The location for the Front Door profile')
 param location string = 'Global'
 
-var uniqueSuffix = uniqueString(subscription().subscriptionId, resourceGroup().id)
+var uniqueSuffix = take(uniqueString(subscription().subscriptionId, resourceGroup().id), 8)
 var endpointName = 'endpoint-${uniqueSuffix}'
-var customDomainName = '${zoneName}-domain-${uniqueSuffix}'
+var customDomainName = replace(zoneName, '.', '-')
 
 resource profiles_resource 'Microsoft.Cdn/profiles@2023-05-01' = {
   name: profileName
@@ -27,7 +24,6 @@ resource profiles_resource 'Microsoft.Cdn/profiles@2023-05-01' = {
   sku: {
     name: 'Standard_AzureFrontDoor'
   }
-  kind: 'frontdoor'
   properties: {
     originResponseTimeoutSeconds: 60
   }
@@ -50,17 +46,11 @@ resource customDomain 'Microsoft.Cdn/profiles/customdomains@2023-05-01' = {
     tlsSettings: {
       certificateType: 'ManagedCertificate'
       minimumTlsVersion: 'TLS12'
-      cipherSuiteSetType: 'TLS12_2022'
     }
     azureDnsZone: {
       id: dnsZoneId
     }
   }
-}
-
-// Reference existing storage account
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
-  name: primaryStorageAccountName
 }
 
 output endpointId string = resourceId('Microsoft.Cdn/profiles/afdendpoints', profileName, endpoint.name)

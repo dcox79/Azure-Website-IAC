@@ -28,8 +28,8 @@ var uniqueSuffix = uniqueString(subscription().subscriptionId, resourceGroup().i
 var storageAccountSkuName = (environment == 'prod') ? 'Standard_GRS' : 'Standard_LRS'
 var appServicePlanSkuName = (environment == 'prod') ? 'P1V2' : 'B1'
 var functionAppName = '${environment}-${funcName}-${uniqueSuffix}'
-var primaryStorageAccountName = '${environment}myprojectstor${uniqueSuffix}'
-var functionStorageAccountName = '${environment}myprojectfunc${uniqueSuffix}'
+var primaryStorageAccountName = '${take(environment, 1)}stor${take(uniqueSuffix, 6)}'
+var functionStorageAccountName = '${take(environment, 1)}func${take(uniqueSuffix, 6)}'
 
 module primaryStorageAccountModule './modules/storageAccount.bicep' = {
   name: 'primaryStorageDeployment'
@@ -80,7 +80,6 @@ module frontDoorModule './modules/frontDoor.bicep' = {
   params: {
     profileName: profileName
     dnsZoneId: resourceId('Microsoft.Network/dnszones', zoneName)
-    primaryStorageAccountName: primaryStorageAccountName
     zoneName: zoneName
     tags: tags
   }
@@ -107,17 +106,6 @@ module appServicePlanModule './modules/appServicePlan.bicep' = {
   }
 }
 
-module functionAppStageModule './modules/functionAppStage.bicep' = {
-  name: 'functionAppStageDeployment'
-  params: {
-    sites_name: functionAppName
-    location: location
-    serverfarms_ASP_externalid: appServicePlanModule.outputs.appServicePlanId
-    zoneName: zoneName
-    tags: tags
-  }
-}
-
 module functionAppProdModule './modules/functionAppProd.bicep' = {
   name: 'functionAppProdDeployment'
   params: {
@@ -125,8 +113,18 @@ module functionAppProdModule './modules/functionAppProd.bicep' = {
     location: location
     appServicePlanId: appServicePlanModule.outputs.appServicePlanId
     zoneName: zoneName
-    runtimeStack: 'dotnet-isolated|8.0'
+    runtimeStack: 'DOTNETCORE-ISOLATED|8.0.x'
     tags: tags
+  }
+}
+
+module cosmosDbModule './modules/cosmosDbAccount.bicep' = {
+  name: 'cosmosDbDeployment'
+  params: {
+    accountName: '${take(environment, 1)}cosmos${take(uniqueSuffix, 6)}'
+    location: location
+    defaultConsistencyLevel: 'Session'
+    enableFreeTier: environment != 'prod'
   }
 }
 
