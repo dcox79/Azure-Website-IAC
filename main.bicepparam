@@ -3,9 +3,9 @@ using './main.bicep'
 // Basic deployment parameters
 param environment = 'prod'
 param location = 'centralus'
-param zoneName = 'davidjcox.online'
-param funcName = 'davidjcoxresume'
-param profileName = 'davidjcoxfdprofile'
+param zoneName = '<ChangeME>'
+param funcName = '<ChangeME>'
+param profileName = '<ChangeME>'
 
 // Resource tags
 param tags = {
