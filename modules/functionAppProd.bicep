@@ -50,6 +50,14 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'WEBSITE_RUN_FROM_PACKAGE'
           value: '1'
         }
+        {
+          name: 'DOTNET_VERSION'
+          value: '8.0'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME_VERSION'
+          value: '8.0'
+        }
       ]
     }
     httpsOnly: true
@@ -90,6 +98,14 @@ resource stagingSlot 'Microsoft.Web/sites/slots@2023-01-01' = {
         {
           name: 'WEBSITE_RUN_FROM_PACKAGE'
           value: '1'
+        }
+        {
+          name: 'DOTNET_VERSION'
+          value: '8.0'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME_VERSION'
+          value: '8.0'
         }
       ]
     }

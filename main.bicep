@@ -113,7 +113,7 @@ module functionAppProdModule './modules/functionAppProd.bicep' = {
     location: location
     appServicePlanId: appServicePlanModule.outputs.appServicePlanId
     zoneName: zoneName
-    runtimeStack: 'DOTNETCORE-ISOLATED|8.0.x'
+    runtimeStack: 'dotnet-isolated|8.0'
     tags: tags
   }
 }
