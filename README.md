@@ -1,62 +1,153 @@
- # Azure Infrastructure Deployment
+# Azure Cloud Infrastructure as Code
+
+This repository contains Infrastructure as Code (IaC) templates using Azure Bicep for deploying a complete cloud infrastructure. The infrastructure includes serverless functions, content delivery, database, and storage components configured for both production and non-production environments.
+
+## Architecture Overview
+
+![Architecture Diagram]
+The infrastructure consists of the following components:
+
+- **Azure Front Door**: Global load balancer and CDN
+- **Azure Functions**: Serverless compute with staging slots
+- **Azure Storage Accounts**: Blob storage for various purposes
+- **Azure Cosmos DB**: NoSQL database with serverless configuration
+- **Azure DNS**: Custom domain management
+- **App Service Plan**: Hosting plan for Function Apps
 
 ## Prerequisites
-- Azure CLI
-- Azure subscription
-- Resource Group created
 
-## Setup
+- Azure CLI (version 2.50.0 or later)
+- Azure subscription with Owner/Contributor access
+- PowerShell 7+ or Azure Cloud Shell
+- Visual Studio Code with Bicep extension (optional)
 
-1. Login to Azure
+## Repository Structure
+
+```
+.
+├── main.bicep              # Main deployment template
+├── main.bicepparam        # Parameter file
+├── modules/
+│   ├── appServicePlan.bicep    # App Service Plan configuration
+│   ├── cosmosDbAccount.bicep   # Cosmos DB configuration
+│   ├── createContainer.bicep   # Storage container creation
+│   ├── dnsZone.bicep          # DNS configuration
+│   ├── frontDoor.bicep        # Front Door configuration
+│   ├── functionAppProd.bicep   # Production function app
+│   ├── functionAppStage.bicep  # Staging function app
+│   └── storageAccount.bicep    # Storage account configuration
+```
+
+## Environment Setup
+
+1. Install Azure CLI and login:
 ```bash
-az account list --refresh --output table
+# Install Azure CLI (Windows)
+winget install Microsoft.AzureCLI
+
+# Login to Azure
 az login
-```
-`az account show --query "[name,id]" -o tsv`
-`az group list --query "[].name" -o tsv | ForEach-Object { az group delete -n $_ -y }`
-
-2. Set your subscription
-```bash
-az account set --subscription <subscription-id>
+az account set --subscription "<subscription-id>"
 ```
 
-3. Set resource group and template variable and create it (if not exists)
-```bash
-$RG="rg-test1"
+2. Configure environment variables:
+```powershell
+$RG="your-resource-group"
+$LOCATION="eastus"
 $TEMPLATE="main.bicep"
 $PARAMS="main.bicepparam"
-az group create --name $RG --location eastus
 ```
 
-## Parameters
-
-Required parameters are defined in `main.bicepparam`:
-```bicep:main.bicepparam
-startLine: 1
-endLine: 33
+3. Create Resource Group:
+```bash
+az group create --name $RG --location $LOCATION
 ```
+
+## Parameter Configuration
+
+Update `main.bicepparam` with your specific values:
+
+- `environment`: 'prod' or 'nonprod'
+- `location`: Azure region
+- `zoneName`: Your custom domain
+- `funcName`: Base name for function apps
+- `profileName`: Front Door profile name
+- `tags`: Resource tagging structure
+- `dnsRecords`: DNS configuration including verification codes
 
 ## Deployment
 
-1. Test the deployment (What-if)
+1. Validate the deployment:
 ```bash
 az deployment group what-if --resource-group $RG --template-file $TEMPLATE --parameters $PARAMS
 ```
 
-2. Deploy the infrastructure
+2. Deploy the infrastructure:
 ```bash
 az deployment group create --resource-group $RG --template-file $TEMPLATE --parameters $PARAMS
 ```
 
-## Resources Deployed
-- Storage Accounts (Primary and Function)
-- Function App (with staging slot)
-- Front Door
-- DNS Zone
-- App Service Plan
-- Cosmos DB Account
+## Security Considerations
 
-## Notes
-- Ensure all parameter values in `main.bicepparam` are properly configured
-- DNS records should be updated with your actual verification codes
-- The deployment may take 15-20 minutes to complete
+- All storage accounts are configured with:
+  - HTTPS-only access
+  - TLS 1.2 minimum version
+  - Disabled public blob access
+  - OAuth authentication enabled
+  
+- Function Apps include:
+  - HTTPS-only access
+  - Managed identity authentication
+  - CORS configuration for specified domains
+  - FTPS-only state
+
+- Front Door provides:
+  - WAF protection (optional)
+  - TLS 1.2 minimum version
+  - Managed certificates for custom domains
+
+## Monitoring and Maintenance
+
+1. Monitor deployments:
+```bash
+az deployment group list --resource-group $RG --query "[].{Name:name, ProvisioningState:properties.provisioningState}" -o table
+```
+
+2. Check resource health:
+```bash
+az resource list --resource-group $RG --query "[].{Name:name, Type:type, Status:properties.provisioningState}" -o table
+```
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Deployment Failures**
+   - Verify parameter values in main.bicepparam
+   - Check resource name availability
+   - Verify subscription permissions
+
+2. **DNS Configuration**
+   - Ensure DNS verification codes are correct
+   - Allow time for DNS propagation (up to 48 hours)
+   - Verify domain ownership
+
+3. **Function App Issues**
+   - Check App Service Plan scaling
+   - Verify storage account connections
+   - Review application settings
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+## Support
+
+For support and questions, please open an issue in the repository.

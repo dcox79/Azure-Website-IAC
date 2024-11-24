@@ -1,3 +1,17 @@
+/*
+  Main Infrastructure Deployment Template
+  
+  This template orchestrates the deployment of a complete cloud infrastructure including:
+  - Storage Accounts (Primary and Function storage)
+  - Function Apps with staging slots
+  - Front Door for global content delivery
+  - DNS Zone configuration
+  - App Service Plan
+  - Cosmos DB Account
+  
+  The deployment supports both production and non-production environments with appropriate scaling.
+*/
+
 @description('The environment type for deployment (nonprod or prod)')
 @allowed([
   'nonprod'

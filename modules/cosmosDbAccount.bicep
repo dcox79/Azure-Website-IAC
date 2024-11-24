@@ -1,3 +1,14 @@
+/*
+  Cosmos DB Account Module
+  
+  This module deploys a Cosmos DB account with SQL API and serverless configuration.
+  Features:
+  - Serverless capacity mode for cost optimization
+  - Periodic backup policy
+  - Configurable consistency level
+  - Default database and container creation
+*/
+
 @description('The name of the Cosmos DB account')
 param accountName string
 

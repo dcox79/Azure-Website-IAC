@@ -1,3 +1,15 @@
+/*
+  Function App Module (Production)
+  
+  This module deploys a production Function App with a staging slot.
+  Key features:
+  - Linux-based runtime
+  - .NET 8.0 isolated worker
+  - CORS configuration for custom domain
+  - HTTPS and TLS 1.2 enforcement
+  - Staging slot for blue-green deployments
+*/
+
 @description('The name of the function app')
 param functionAppName string
 

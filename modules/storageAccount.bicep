@@ -1,3 +1,15 @@
+/*
+  Storage Account Module
+  
+  This module deploys a storage account with comprehensive security settings and
+  necessary containers for Function Apps. It includes:
+  - Blob, File, Queue, and Table services
+  - Function-specific containers
+  - OAuth authentication
+  - TLS 1.2 enforcement
+  - HTTPS-only access
+*/
+
 @description('The name of the storage account')
 param storageAccountName string
 
