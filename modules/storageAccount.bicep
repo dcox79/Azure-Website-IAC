@@ -40,6 +40,9 @@ param allowBlobPublicAccess bool = false
 @description('Enable shared key access')
 param allowSharedKeyAccess bool = true
 
+@description('Custom domain name for the storage account')
+param customDomain string = ''
+
 @description('Resource tags')
 param tags object
 
@@ -70,6 +73,10 @@ var storageAccountProperties = {
     keySource: 'Microsoft.Storage'
   }
   accessTier: accessTier
+  customDomain: !empty(customDomain) ? {
+    name: customDomain
+    useSubDomainName: true
+  } : null
 }
 
 // Storage Account
@@ -93,27 +100,27 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
       corsRules: []
     }
     deleteRetentionPolicy: {
-      allowPermanentDelete: false
       enabled: false
     }
   }
 }
 
-// File Service
-resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2023-05-01' = {
-  parent: storageAccount
-  name: 'default'
+// Function App Containers
+resource functionContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'azure-webjobs-hosts'
   properties: {
-    protocolSettings: {
-      smb: {}
-    }
-    cors: {
-      corsRules: []
-    }
-    shareDeleteRetentionPolicy: {
-      enabled: true
-      days: 7
-    }
+    publicAccess: 'None'
+    metadata: {}
+  }
+}
+
+resource secretsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'azure-webjobs-secrets'
+  properties: {
+    publicAccess: 'None'
+    metadata: {}
   }
 }
 
@@ -139,31 +146,21 @@ resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-05-0
   }
 }
 
-// Function-specific containers
-var functionContainers = [
-  'azure-webjobs-hosts'
-  'azure-webjobs-secrets'
-  'function-releases'
-  'scm-releases'
-]
-
-resource functionContainerResources 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = [for container in functionContainers: {
-  parent: blobService
-  name: container
+// File Service
+resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2023-05-01' = {
+  parent: storageAccount
+  name: 'default'
   properties: {
-    immutableStorageWithVersioning: {
+    cors: {
+      corsRules: []
+    }
+    shareDeleteRetentionPolicy: {
       enabled: false
     }
-    defaultEncryptionScope: '$account-encryption-key'
-    denyEncryptionScopeOverride: false
-    publicAccess: 'None'
   }
-}]
+}
 
 // Outputs
 output storageAccountId string = storageAccount.id
 output storageAccountName string = storageAccount.name
-output blobEndpoint string = storageAccount.properties.primaryEndpoints.blob
-output fileEndpoint string = storageAccount.properties.primaryEndpoints.file
-output queueEndpoint string = storageAccount.properties.primaryEndpoints.queue
-output tableEndpoint string = storageAccount.properties.primaryEndpoints.table
+output primaryEndpoints object = storageAccount.properties.primaryEndpoints

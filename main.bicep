@@ -54,6 +54,7 @@ module primaryStorageAccountModule './modules/storageAccount.bicep' = {
     accessTier: 'Hot'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: true
+    customDomain: zoneName
     tags: tags
   }
 }

@@ -3,9 +3,9 @@ using './main.bicep'
 // Basic deployment parameters
 param environment = 'prod'
 param location = 'centralus'
-param zoneName = '<ChangeME>'
-param funcName = '<ChangeME>'
-param profileName = '<ChangeME>'
+param zoneName = 'davidjcox.online'
+param funcName = 'djcJSONResume'
+param profileName = 'djcJSONResPro'
 
 // Resource tags
 param tags = {
@@ -30,13 +30,5 @@ param dnsRecords = {
       ttl: 3600
     }
   ]
-  txtRecords: [
-    {
-      name: '@'
-      ttl: 3600
-      values: [
-        'MS=ms12345678' // Replace with your actual verification code
-      ]
-    }
-  ]
+  txtRecords: []
 }

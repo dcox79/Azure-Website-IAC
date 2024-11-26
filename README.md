@@ -49,11 +49,12 @@ winget install Microsoft.AzureCLI
 az login
 az account set --subscription "<subscription-id>"
 ```
+```az group list --query "[].name" -o tsv | ForEach-Object { az group delete --name $_ --yes --no-wait }``` 
 
 2. Configure environment variables:
 ```powershell
-$RG="your-resource-group"
-$LOCATION="eastus"
+$RG="rg-webapp-102-lz"
+$LOCATION="centralus"
 $TEMPLATE="main.bicep"
 $PARAMS="main.bicepparam"
 ```
@@ -77,14 +78,29 @@ Update `main.bicepparam` with your specific values:
 
 ## Deployment
 
-1. Validate the deployment:
-```bash
-az deployment group what-if --resource-group $RG --template-file $TEMPLATE --parameters $PARAMS
+1. Set up environment variables:
+```powershell
+# Run the environment setup script
+./scripts/Set-Environment.ps1 -ResourceGroupName "your-resource-group" -Location "your-location" -Environment "prod"
 ```
 
-2. Deploy the infrastructure:
+2. Validate the deployment:
 ```bash
-az deployment group create --resource-group $RG --template-file $TEMPLATE --parameters $PARAMS
+az deployment group what-if --resource-group $env:AZURE_RG --template-file $TEMPLATE --parameters $PARAMS
+```
+
+3. Deploy the infrastructure:
+```bash
+az deployment group create --resource-group $env:AZURE_RG --template-file $TEMPLATE --parameters $PARAMS
+```
+
+4. Update Storage Account Verification:
+```powershell
+# Connect to Azure (if not already connected)
+Connect-AzAccount
+
+# Run the storage verification script (uses environment variables)
+./scripts/Update-StorageVerification.ps1
 ```
 
 ## Security Considerations
